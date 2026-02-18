@@ -1,0 +1,195 @@
+import {
+  KeyOutlined,
+  SaveOutlined,
+  SendOutlined,
+  SettingOutlined,
+  TagsOutlined
+} from "@ant-design/icons";
+import { useKeyPress } from "ahooks";
+import { Button, Card, Empty, Flex, Input, Select, Space, Tabs, Tag, Typography, message } from "antd";
+import { useState } from "react";
+import { useApiStore } from "../stores/apiStore";
+import { useRunStore } from "../stores/runStore";
+import { useTreeStore } from "../stores/treeStore";
+import { HTTP_METHODS } from "../utils/constants";
+import { BodyEditor } from "./BodyEditor";
+import { EditableKvTable } from "./EditableKvTable";
+import { ResponseViewer } from "./ResponseViewer";
+
+export const RequestEditor = ({ projectId }: { projectId: string }) => {
+  const current = useApiStore((state) => state.current);
+  const patchCurrent = useApiStore((state) => state.patchCurrent);
+  const saveCurrent = useApiStore((state) => state.saveCurrent);
+  const refreshNodes = useTreeStore((state) => state.refresh);
+  const run = useRunStore((state) => state.run);
+  const loading = useRunStore((state) => state.loading);
+  const result = useRunStore((state) => state.result);
+  
+  const [saving, setSaving] = useState(false);
+
+  // 手动保存函数
+  const handleSave = async () => {
+    if (!current) return;
+    setSaving(true);
+    try {
+      await saveCurrent();
+      await refreshNodes(projectId); // 刷新树
+      message.success("保存成功");
+    } catch (error) {
+      message.error("保存失败");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // 监听 Command+S / Ctrl+S
+  useKeyPress(['meta.s', 'ctrl.s'], (e) => {
+    e.preventDefault();
+    handleSave();
+  });
+  if (!current) {
+    return <div className="flex h-full w-full items-center justify-center">
+      <Empty description="请选择一个接口" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+    </div>
+  }
+
+  return (
+    <div className="flex h-full w-full flex-col gap-3 overflow-y-auto p-3 sm:p-4">
+      {/* URL Bar */}
+      <Card className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-elevated)] p-3 shadow-[var(--shadow-md)] sm:p-4">
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-[var(--text-secondary)]">接口名称</label>
+            <Input
+              value={current.name}
+              placeholder="请输入接口名称"
+              onChange={(event) => patchCurrent({ name: event.target.value })}
+              className="w-full"
+            />
+          </div>
+
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Select
+              value={current.method}
+              options={HTTP_METHODS.map((method) => ({ value: method, label: method }))}
+              onChange={(method) => patchCurrent({ method: method as typeof current.method })}
+              className="w-full sm:w-28"
+            />
+
+            <Input
+              value={current.url}
+              placeholder="请输入请求地址"
+              onChange={(event) => patchCurrent({ url: event.target.value })}
+              className="flex-1"
+            />
+
+            <div className="flex gap-2">
+            
+              <Button
+                type="primary"
+                icon={<SendOutlined />}
+                loading={loading}
+                className="flex-1 sm:flex-initial"
+                onClick={async () => {
+                  if (!current.url) {
+                    message.warning("请先输入请求地址");
+                    return;
+                  }
+                  // await handleSave();
+                  await run({
+                    method: current.method,
+                    url: current.url,
+                    auth: current.auth,
+                    headers: current.headers,
+                    query: current.query,
+                    body: current.body
+                  });
+                }}
+              >
+                发送
+              </Button>
+               <Button
+                icon={<SaveOutlined />}
+                loading={saving}
+                onClick={handleSave}
+              >
+                保存
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Request Parameters */}
+      <Card className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-elevated)] shadow-[var(--shadow-md)]">
+        <Tabs
+          items={[
+            {
+              key: "auth",
+              label: <span><KeyOutlined /> 认证</span>,
+              children: (
+                <Space direction="vertical" className="w-full">
+                  <Select
+                    value={current.auth.type}
+                    options={[
+                      { label: "无认证", value: "none" },
+                      { label: "Bearer 令牌", value: "bearer" }
+                    ]}
+                    onChange={(type) => patchCurrent({ auth: { ...current.auth, type: type as "none" | "bearer" } })}
+                    className="w-full sm:w-55"
+                  />
+                  {current.auth.type === "bearer" && (
+                    <Input.Password
+                      value={current.auth.token}
+                      onChange={(event) => patchCurrent({ auth: { ...current.auth, token: event.target.value } })}
+                      placeholder="请输入 Bearer 令牌"
+                    />
+                  )}
+                </Space>
+              )
+            },
+            {
+              key: "headers",
+              label: <span><TagsOutlined /> 请求头</span>,
+              children: <EditableKvTable value={current.headers} onChange={(headers) => patchCurrent({ headers })} />
+            },
+            {
+              key: "query",
+              label: <span><SettingOutlined /> 查询参数</span>,
+              children: <EditableKvTable value={current.query} onChange={(query) => patchCurrent({ query })} />
+            },
+            {
+              key: "body",
+              label: "消息体",
+              children: (
+                <BodyEditor
+                  type={current.body.type}
+                  value={current.body.value}
+                  onTypeChange={(type) => patchCurrent({ body: { ...current.body, type: type as typeof current.body.type } })}
+                  onValueChange={(value) => patchCurrent({ body: { ...current.body, value } })}
+                />
+              )
+            }
+          ]}
+        />
+      </Card>
+
+      {/* Response Panel */}
+      <Card className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-elevated)] shadow-[var(--shadow-md)]">
+        <Flex justify="space-between" align="center" className="mb-3" wrap="wrap" gap={8}>
+          <Typography.Title level={5} className="!m-0">
+            响应结果
+          </Typography.Title>
+          {result ? (
+            <Space size={8} wrap>
+              <Tag color={result.error ? "error" : "success"}>状态 {result.status ?? "失败"}</Tag>
+              <Tag>耗时 {result.durationMs}ms</Tag>
+              <Tag>头部 {Object.keys(result.headers).length}</Tag>
+            </Space>
+          ) : null}
+        </Flex>
+        <ResponseViewer result={result} />
+      </Card>
+    </div>
+  );
+};
