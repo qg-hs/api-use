@@ -6,7 +6,7 @@ import {
   TagsOutlined
 } from "@ant-design/icons";
 import { useKeyPress } from "ahooks";
-import { Button, Card, Empty, Flex, Input, Select, Space, Tabs, Tag, Typography, message } from "antd";
+import { Button, Card, Col, Empty, Flex, Input, Row, Select, Space, Tabs, Tag, Typography, message } from "antd";
 import { useState } from "react";
 import { useApiStore } from "../stores/apiStore";
 import { useRunStore } from "../stores/runStore";
@@ -126,41 +126,46 @@ export const RequestEditor = ({ projectId }: { projectId: string }) => {
           items={[
             {
               key: "auth",
-              label: <span><KeyOutlined /> 认证</span>,
+              label: <span><KeyOutlined /> 认证（Auth）</span>,
               children: (
-                <Space direction="vertical" className="w-full">
-                  <Select
+                <Row className="w-full">
+                  <Col lg={5} md={6} sm={24} xs={24}>
+                    <Select
                     value={current.auth.type}
                     options={[
                       { label: "无认证", value: "none" },
                       { label: "Bearer 令牌", value: "bearer" }
                     ]}
                     onChange={(type) => patchCurrent({ auth: { ...current.auth, type: type as "none" | "bearer" } })}
-                    className="w-full sm:w-55"
+                    className="w-full"
                   />
+                  </Col>  
+                  <Col lg={19} md={18} sm={24} xs={24}>
                   {current.auth.type === "bearer" && (
                     <Input.Password
                       value={current.auth.token}
                       onChange={(event) => patchCurrent({ auth: { ...current.auth, token: event.target.value } })}
                       placeholder="请输入 Bearer 令牌"
+                      className="w-full md:ml-[10px] sm:ml-0 mt-[10px] md:mt-0"
                     />
                   )}
-                </Space>
+                  </Col>
+                </Row>
               )
             },
             {
               key: "headers",
-              label: <span><TagsOutlined /> 请求头</span>,
+              label: <span><TagsOutlined /> 请求头（Headers）</span>,
               children: <EditableKvTable value={current.headers} onChange={(headers) => patchCurrent({ headers })} />
             },
             {
               key: "query",
-              label: <span><SettingOutlined /> 查询参数</span>,
+              label: <span><SettingOutlined /> 查询参数（Query）</span>,
               children: <EditableKvTable value={current.query} onChange={(query) => patchCurrent({ query })} />
             },
             {
               key: "body",
-              label: "消息体",
+              label: "消息体（Body）",
               children: (
                 <BodyEditor
                   type={current.body.type}
@@ -182,9 +187,9 @@ export const RequestEditor = ({ projectId }: { projectId: string }) => {
           </Typography.Title>
           {result ? (
             <Space size={8} wrap>
-              <Tag color={result.error ? "error" : "success"}>状态 {result.status ?? "失败"}</Tag>
-              <Tag>耗时 {result.durationMs}ms</Tag>
-              <Tag>头部 {Object.keys(result.headers).length}</Tag>
+              <Tag color={result.error ? "error" : "success"}>状态 <span className={result.error ? "text-red-500" : "text-green-500"}>{result.status ?? "失败"}</span></Tag>
+              <Tag>耗时 <span className={result.error ? "text-red-500" : "text-green-500"}> {result.durationMs}ms</span></Tag>
+              <Tag>头部 <span className={result.error ? "text-red-500" : "text-green-500"}>{Object.keys(result.headers).length}</span></Tag>
             </Space>
           ) : null}
         </Flex>

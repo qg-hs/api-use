@@ -15,7 +15,9 @@
         "title": "API-USE",
         "width": 1400,
         "height": 900,
-        "resizable": true
+        "resizable": true,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true
       }
     ],
     "security": {

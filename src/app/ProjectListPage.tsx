@@ -28,6 +28,7 @@ import { exportProjectAsJson, importProjectFromJson } from "../importExport";
 import { ProjectFormModal } from "../components/ProjectFormModal";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { ThemeSelector } from "../components/ThemeSelector";
+import { TitleBar } from "../components/TitleBar";
 import { MobileMenu } from "../components/MobileMenu";
 import { useProjectStore } from "../stores/projectStore";
 import type { Project } from "../types";
@@ -72,7 +73,11 @@ export const ProjectListPage = () => {
   };
 
   return (
-    <div className="min-h-screen w-full px-3 py-3 sm:px-4 sm:py-4 lg:px-6">
+    <div className="min-h-screen w-full">
+      {/* 沉浸式标题栏 */}
+      <TitleBar />
+
+      <div className="px-3 py-3 sm:px-4 sm:py-4 lg:px-6">
       {/* Header */}
       <header className="grid grid-cols-1 gap-3 rounded-xl border border-[var(--border-default)] bg-gradient-topbar p-3 shadow-topbar md:grid-cols-[auto_1fr_auto] md:items-center md:px-4">
         <div className="inline-flex items-center gap-2 sm:gap-3">
@@ -307,6 +312,7 @@ export const ProjectListPage = () => {
           setModalState({ open: false, mode: "create" });
         }}
       />
+      </div>
     </div>
   );
 };

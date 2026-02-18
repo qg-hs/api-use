@@ -1,12 +1,15 @@
 import {
   ApiOutlined,
+  CopyOutlined,
   EllipsisOutlined,
   FolderAddOutlined,
   FolderOpenOutlined,
   PlusCircleOutlined,
-  SearchOutlined
+  SearchOutlined,
+  SnippetsOutlined
 } from "@ant-design/icons";
 import { Badge, Button, Dropdown, Input, Modal, Tree, message } from "antd";
+import type { TreeProps } from "antd";
 import { useMemo, useState } from "react";
 import type { HttpMethod, TreeNode } from "../types";
 import { buildTreeData } from "../utils/tree";
@@ -15,11 +18,19 @@ type Props = {
   nodes: TreeNode[];
   selectedNodeId: string | null;
   methodMap: Record<string, HttpMethod | undefined>;
+  /** 剪贴板中是否有内容 */
+  hasClipboard?: boolean;
   onSelect: (nodeId: string | null) => void;
   onAdd: (type: TreeNode["type"], parentId: string | null, name: string) => Promise<string | null>;
   onRename: (nodeId: string, name: string) => Promise<void>;
   onDelete: (nodeId: string) => Promise<void>;
   onMove: (nodeId: string, direction: "up" | "down") => Promise<void>;
+  /** 复制节点 */
+  onCopy?: (nodeId: string) => void;
+  /** 粘贴到指定父节点下 */
+  onPaste?: (parentId: string | null) => Promise<void>;
+  /** 拖拽移动节点：nodeId 移到 newParentId 下的 index 位置 */
+  onDrop?: (nodeId: string, newParentId: string | null, index: number) => Promise<void>;
 };
 
 const methodColorMap: Record<HttpMethod, string> = {
@@ -31,7 +42,11 @@ const methodColorMap: Record<HttpMethod, string> = {
 };
 
 
-export const TreePanel = ({ nodes, selectedNodeId, methodMap, onSelect, onAdd, onRename, onDelete, onMove }: Props) => {
+export const TreePanel = ({
+  nodes, selectedNodeId, methodMap, hasClipboard,
+  onSelect, onAdd, onRename, onDelete, onMove,
+  onCopy, onPaste, onDrop
+}: Props) => {
   const [keyword, setKeyword] = useState("");
   const [promptOpen, setPromptOpen] = useState(false);
   const [promptValue, setPromptValue] = useState("");
@@ -58,6 +73,40 @@ export const TreePanel = ({ nodes, selectedNodeId, methodMap, onSelect, onAdd, o
   }, [keyword, nodes]);
 
   const treeData = useMemo(() => buildTreeData(visibleNodes), [visibleNodes]);
+
+  /** Antd Tree 拖拽回调 */
+  const handleDrop: TreeProps["onDrop"] = async (info) => {
+    if (!onDrop) return;
+
+    const dragNodeId = info.dragNode.key as string;
+    const dropNodeId = info.node.key as string;
+    const dropNode = nodes.find((n) => n.id === dropNodeId);
+    if (!dropNode) return;
+
+    try {
+      if (info.dropToGap) {
+        // 拖拽到节点之间（同级排序）
+        const newParentId = dropNode.parentId;
+        const siblings = nodes
+          .filter((n) => n.parentId === newParentId && n.id !== dragNodeId)
+          .sort((a, b) => a.sortOrder - b.sortOrder);
+        const dropIndex = siblings.findIndex((n) => n.id === dropNodeId);
+        // dropPosition: -1=上方, 1=下方
+        const targetIndex = info.dropPosition > dropIndex ? dropIndex + 1 : dropIndex;
+        await onDrop(dragNodeId, newParentId, Math.max(0, targetIndex));
+      } else {
+        // 拖拽到节点上（放进文件夹）
+        if (dropNode.type !== "folder") {
+          message.warning("只能拖拽到文件夹中");
+          return;
+        }
+        const childrenCount = nodes.filter((n) => n.parentId === dropNodeId).length;
+        await onDrop(dragNodeId, dropNodeId, childrenCount);
+      }
+    } catch (error) {
+      message.error((error as Error).message);
+    }
+  };
 
   return (
     <div className="flex h-full w-full flex-col gap-3">
@@ -106,9 +155,17 @@ export const TreePanel = ({ nodes, selectedNodeId, methodMap, onSelect, onAdd, o
         <Tree
           blockNode
           showLine={false}
+          draggable={{ icon: false }} /* 启用拖拽，隐藏拖拽图标 */
           selectedKeys={selectedNodeId ? [selectedNodeId] : []}
           treeData={treeData}
           onSelect={(keys) => onSelect((keys[0] as string) ?? null)}
+          onDrop={handleDrop}
+          allowDrop={({ dropNode, dropPosition }) => {
+            const target = nodes.find((n) => n.id === dropNode.key);
+            // 只允许拖入文件夹内部，或拖到任意节点的间隙
+            if (dropPosition === 0 && target?.type !== "folder") return false;
+            return true;
+          }}
           titleRender={(node) => {
             const rawNode = nodes.find((item) => item.id === node.key);
             if (!rawNode) return String(node.title);
@@ -154,6 +211,32 @@ export const TreePanel = ({ nodes, selectedNodeId, methodMap, onSelect, onAdd, o
                         },
                       ] : []),
                       {
+                        key: "copy",
+                        icon: <CopyOutlined />,
+                        label: "复制",
+                        onClick: () => {
+                          onCopy?.(rawNode.id);
+                          message.success("已复制");
+                        }
+                      },
+                      // 只有文件夹或根目录才能粘贴
+                      ...(hasClipboard && rawNode.type === "folder" ? [
+                        {
+                          key: "paste",
+                          icon: <SnippetsOutlined />,
+                          label: "粘贴到此文件夹",
+                          onClick: async () => {
+                            try {
+                              await onPaste?.(rawNode.id);
+                              message.success("已粘贴");
+                            } catch (error) {
+                              message.error((error as Error).message);
+                            }
+                          }
+                        }
+                      ] : []),
+                      { type: "divider" as const },
+                      {
                         key: "rename",
                         label: "重命名",
                         onClick: () => {
@@ -164,6 +247,7 @@ export const TreePanel = ({ nodes, selectedNodeId, methodMap, onSelect, onAdd, o
                       },
                       { key: "up", label: "上移", onClick: () => onMove(rawNode.id, "up") },
                       { key: "down", label: "下移", onClick: () => onMove(rawNode.id, "down") },
+                      { type: "divider" as const },
                       {
                         key: "delete",
                         label: "删除",

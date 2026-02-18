@@ -12,6 +12,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { listApiItemsByProject, listProjects } from "../db";
 import { RequestEditor } from "../components/RequestEditor";
 import { ThemeToggle } from "../components/ThemeToggle";
+import { TitleBar } from "../components/TitleBar";
 import { TreePanel } from "../components/TreePanel";
 import { exportProjectAsJson, importProjectFromJson } from "../importExport";
 import { useApiStore } from "../stores/apiStore";
@@ -42,6 +43,10 @@ export const ProjectPage = () => {
   const renameNode = useTreeStore((state) => state.renameNode);
   const removeNode = useTreeStore((state) => state.removeNode);
   const moveNode = useTreeStore((state) => state.moveNode);
+  const copyNode = useTreeStore((state) => state.copyNode);
+  const pasteNode = useTreeStore((state) => state.pasteNode);
+  const moveToParent = useTreeStore((state) => state.moveToParent);
+  const clipboardNodeId = useTreeStore((state) => state.clipboardNodeId);
 
   const [methodMap, setMethodMap] = useState<Record<string, HttpMethod | undefined>>({});
 
@@ -88,6 +93,7 @@ export const ProjectPage = () => {
       nodes={nodes}
       selectedNodeId={selectedNodeId}
       methodMap={methodMap}
+      hasClipboard={!!clipboardNodeId}
       onSelect={(nodeId) => {
         selectNode(nodeId);
         if (isMobile) setDrawerOpen(false);
@@ -100,11 +106,17 @@ export const ProjectPage = () => {
       onRename={async (nodeId, name) => renameNode(nodeId, name, projectId)}
       onDelete={async (nodeId) => removeNode(nodeId, projectId)}
       onMove={async (nodeId, direction) => moveNode(nodeId, direction, projectId)}
+      onCopy={(nodeId) => copyNode(nodeId)}
+      onPaste={async (parentId) => pasteNode(parentId, projectId)}
+      onDrop={async (nodeId, newParentId, index) => moveToParent(nodeId, newParentId, index, projectId)}
     />
   );
 
   return (
     <div className="flex h-screen w-full flex-col overflow-hidden bg-[var(--bg-base)] text-[var(--text-primary)]">
+      {/* 沉浸式标题栏 */}
+      <TitleBar />
+
       {/* Header */}
       <header className="flex h-12 w-full shrink-0 items-center justify-between border-b border-[var(--border-default)] bg-gradient-topbar px-3 shadow-topbar">
         <div className="flex min-w-0 flex-1 items-center gap-2">

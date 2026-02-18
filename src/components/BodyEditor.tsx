@@ -26,7 +26,7 @@ export const BodyEditor = ({ type, value, onTypeChange, onValueChange }: Props) 
 
   return (
     <Space direction="vertical" size={12} className="w-full">
-      <Select value={type} onChange={onTypeChange} options={bodyTypeOptions} />
+      <Select className="w-[250px] min-[200px] max-[300px]" value={type} onChange={onTypeChange} options={bodyTypeOptions} />
 
       {type === "none" && <Typography.Text type="secondary">当前请求不发送请求体。</Typography.Text>}
 

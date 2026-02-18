@@ -48,6 +48,69 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   沉浸式标题栏 (不放入 @layer，确保 -webkit-app-region 优先级)
+   ═══════════════════════════════════════════════════════════════ */
+
+.titlebar {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  width: 100%;
+  flex-shrink: 0;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-app-region: drag;
+  background: var(--bg-base);
+  border-bottom: 1px solid var(--border-default);
+  position: relative;
+  z-index: 9999;
+}
+
+.titlebar-traffic-light-spacer {
+  width: 70px;
+  flex-shrink: 0;
+}
+
+.titlebar-drag-fill {
+  flex: 1;
+  height: 100%;
+  -webkit-app-region: drag;
+}
+
+.titlebar-controls {
+  display: flex;
+  height: 100%;
+  flex-shrink: 0;
+  -webkit-app-region: no-drag;
+}
+
+.titlebar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 100%;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  padding: 0;
+  outline: none;
+  -webkit-app-region: no-drag;
+}
+
+.titlebar-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.titlebar-btn-close:hover {
+  background: #e81123;
+  color: #fff;
+}
+
+/* ═══════════════════════════════════════════════════════════════
    Antd 组件覆写 (必要的全局样式)
    ═══════════════════════════════════════════════════════════════ */
 
