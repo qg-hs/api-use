@@ -13,6 +13,7 @@
     @apply min-h-screen antialiased;
     background: var(--bg-base);
     color: var(--text-primary);
+    -webkit-app-region: no-drag; /* 内容区不触发窗口拖拽，只有 .titlebar 触发 */
   }
 
   body {

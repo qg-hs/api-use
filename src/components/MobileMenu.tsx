@@ -1,5 +1,5 @@
 import { BgColorsOutlined, MoonOutlined, SunOutlined, UploadOutlined, SettingOutlined } from "@ant-design/icons";
-import { Button, Dropdown, Upload, Divider } from "antd";
+import { Button, Dropdown, Upload } from "antd";
 import type { MenuProps } from "antd";
 import { useThemeStore } from "../stores/themeStore";
 
