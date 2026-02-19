@@ -15,6 +15,14 @@ export type KV = {
   enabled: boolean;
 };
 
+/** 表单专用 KV，支持 text/file 值类型 */
+export type FormKV = {
+  key: string;
+  value: string;
+  valueType: "text" | "file";
+  enabled: boolean;
+};
+
 export type Project = {
   id: string;
   name: string;

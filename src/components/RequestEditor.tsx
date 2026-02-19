@@ -170,7 +170,11 @@ export const RequestEditor = ({ projectId }: { projectId: string }) => {
                 <BodyEditor
                   type={current.body.type}
                   value={current.body.value}
-                  onTypeChange={(type) => patchCurrent({ body: { ...current.body, type: type as typeof current.body.type } })}
+                  onTypeChange={(type) => {
+                    // 切换类型时同时重置 value，避免残留数据导致 [object Object]
+                    const defaultValue = type === "form" ? [] : "";
+                    patchCurrent({ body: { type: type as typeof current.body.type, value: defaultValue } });
+                  }}
                   onValueChange={(value) => patchCurrent({ body: { ...current.body, value } })}
                 />
               )

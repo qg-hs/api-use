@@ -1,5 +1,6 @@
+import { readFile } from "@tauri-apps/plugin-fs";
 import type { Executor } from "./types";
-import type { RequestConfig, RunResult } from "../types";
+import type { FormKV, RequestConfig, RunResult } from "../types";
 
 const toSearchParams = (config: RequestConfig) => {
   const params = new URLSearchParams();
@@ -10,7 +11,15 @@ const toSearchParams = (config: RequestConfig) => {
   return params;
 };
 
-const resolveBody = (config: RequestConfig) => {
+/** 判断表单数据中是否包含 file 类型行 */
+const hasFileEntry = (entries: FormKV[]): boolean =>
+  entries.some(
+    (row) => row.enabled && row.key && row.valueType === "file" && row.value,
+  );
+
+const resolveBody = async (
+  config: RequestConfig,
+): Promise<BodyInit | undefined> => {
   if (config.method === "GET") {
     return undefined;
   }
@@ -24,8 +33,33 @@ const resolveBody = (config: RequestConfig) => {
   }
 
   if (config.body.type === "form") {
+    const entries: FormKV[] = Array.isArray(config.body.value)
+      ? (config.body.value as FormKV[])
+      : [];
+
+    // 存在 file 类型时用 FormData（浏览器自动设置 multipart boundary）
+    if (hasFileEntry(entries)) {
+      const formData = new FormData();
+      for (const row of entries) {
+        if (!row.enabled || !row.key) continue;
+        if (row.valueType === "file" && row.value) {
+          try {
+            const bytes = await readFile(row.value);
+            const fileName = row.value.split("/").pop() ?? "file";
+            const blob = new Blob([bytes]);
+            formData.append(row.key, blob, fileName);
+          } catch {
+            // 文件读取失败时跳过该字段
+          }
+        } else {
+          formData.append(row.key, row.value ?? "");
+        }
+      }
+      return formData;
+    }
+
+    // 纯 text 字段用 URLSearchParams
     const params = new URLSearchParams();
-    const entries = Array.isArray(config.body.value) ? config.body.value : [];
     for (const row of entries) {
       if (!row.enabled || !row.key) continue;
       params.append(row.key, row.value ?? "");
@@ -39,7 +73,10 @@ const resolveBody = (config: RequestConfig) => {
 export const fetchExecutor: Executor = {
   async execute(config: RequestConfig): Promise<RunResult> {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), config.timeoutMs ?? 15000);
+    const timeout = setTimeout(
+      () => controller.abort(),
+      config.timeoutMs ?? 15000,
+    );
     const start = performance.now();
 
     try {
@@ -60,18 +97,22 @@ export const fetchExecutor: Executor = {
       if (config.body.type === "json") {
         headers.set("Content-Type", "application/json");
       }
-      if (config.body.type === "form") {
+
+      const body = await resolveBody(config);
+
+      // form 且无 file 时设置 urlencoded；有 file 时 FormData 自动设置 Content-Type
+      if (config.body.type === "form" && !(body instanceof FormData)) {
         headers.set("Content-Type", "application/x-www-form-urlencoded");
       }
 
       const resp = await fetch(url.toString(), {
         method: config.method,
         headers,
-        body: resolveBody(config),
-        signal: controller.signal
+        body,
+        signal: controller.signal,
       });
 
-      const body = await resp.text();
+      const respBody = await resp.text();
       const headersMap: Record<string, string> = {};
       resp.headers.forEach((value, key) => {
         headersMap[key] = value;
@@ -81,8 +122,8 @@ export const fetchExecutor: Executor = {
         status: resp.status,
         durationMs: Math.round(performance.now() - start),
         headers: headersMap,
-        body,
-        error: null
+        body: respBody,
+        error: null,
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";
@@ -94,10 +135,10 @@ export const fetchExecutor: Executor = {
         body: "",
         error: isCors
           ? `请求失败：可能是 CORS 限制或网络不可达。原始错误: ${message}`
-          : `请求失败：${message}`
+          : `请求失败：${message}`,
       };
     } finally {
       clearTimeout(timeout);
     }
-  }
+  },
 };

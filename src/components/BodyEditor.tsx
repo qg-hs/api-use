@@ -1,8 +1,8 @@
 import { Button, Flex, Select, Space, Typography, message } from "antd";
 import TextArea from "antd/es/input/TextArea";
-import type { BodyType, KV } from "../types";
+import type { BodyType, FormKV } from "../types";
 import { BODY_TYPES } from "../utils/constants";
-import { EditableKvTable } from "./EditableKvTable";
+import { FormKvTable } from "./FormKvTable";
 
 type Props = {
   type: BodyType;
@@ -31,8 +31,8 @@ export const BodyEditor = ({ type, value, onTypeChange, onValueChange }: Props) 
       {type === "none" && <Typography.Text type="secondary">当前请求不发送请求体。</Typography.Text>}
 
       {type === "form" && (
-        <EditableKvTable
-          value={(Array.isArray(value) ? (value as KV[]) : []) ?? []}
+        <FormKvTable
+          value={(Array.isArray(value) ? (value as FormKV[]) : []) ?? []}
           onChange={(next) => onValueChange(next)}
         />
       )}
@@ -43,8 +43,8 @@ export const BodyEditor = ({ type, value, onTypeChange, onValueChange }: Props) 
             <Button
               onClick={() => {
                 try {
-                  const parsed = JSON.parse(String(value || "{}"));
-                  onValueChange(parsed);
+                  const raw = typeof value === "string" ? value : JSON.stringify(value ?? {});
+                  JSON.parse(raw || "{}"); // 仅校验，不写回对象
                   message.success("JSON 校验通过");
                 } catch (error) {
                   message.error(`JSON 不合法: ${(error as Error).message}`);
@@ -56,8 +56,9 @@ export const BodyEditor = ({ type, value, onTypeChange, onValueChange }: Props) 
             <Button
               onClick={() => {
                 try {
-                  const parsed = typeof value === "string" ? JSON.parse(value || "{}") : value;
-                  onValueChange(parsed);
+                  const raw = typeof value === "string" ? value : JSON.stringify(value ?? {});
+                  const parsed = JSON.parse(raw || "{}");
+                  onValueChange(JSON.stringify(parsed, null, 2)); // 写回格式化后的字符串
                   message.success("JSON 已格式化");
                 } catch {
                   message.error("格式化失败，请先修正 JSON");
@@ -78,7 +79,7 @@ export const BodyEditor = ({ type, value, onTypeChange, onValueChange }: Props) 
       {type !== "none" && type !== "form" && type !== "json" && (
         <TextArea
           autoSize={{ minRows: 8, maxRows: 18 }}
-          value={String(value ?? "")}
+          value={typeof value === "object" ? "" : String(value ?? "")}
           onChange={(event) => onValueChange(event.target.value)}
         />
       )}

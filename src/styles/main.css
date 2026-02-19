@@ -61,8 +61,6 @@
   -webkit-user-select: none;
   user-select: none;
   -webkit-app-region: drag;
-  background: var(--bg-base);
-  border-bottom: 1px solid var(--border-default);
   position: relative;
   z-index: 9999;
 }

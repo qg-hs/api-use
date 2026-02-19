@@ -14,8 +14,22 @@ export const useRunStore = create<RunState>((set) => ({
   result: null,
   run: async (config) => {
     set({ loading: true });
-    const result = await executor.execute(config);
-    set({ result, loading: false });
+    try {
+      const result = await executor.execute(config);
+      set({ result, loading: false });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      set({
+        result: {
+          status: null,
+          durationMs: 0,
+          headers: {},
+          body: "",
+          error: `执行失败: ${msg}`,
+        },
+        loading: false,
+      });
+    }
   },
-  clear: () => set({ result: null })
+  clear: () => set({ result: null }),
 }));
