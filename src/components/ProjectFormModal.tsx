@@ -36,7 +36,8 @@ export const ProjectFormModal = ({
         await onSubmit(values);
       }}
       okButtonProps={{ loading }}
-      destroyOnClose
+      destroyOnHidden
+      centered
     >
       <Form form={form} layout="vertical">
         <Form.Item

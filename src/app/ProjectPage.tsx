@@ -4,18 +4,21 @@ import {
   ExportOutlined,
   ImportOutlined,
   MenuOutlined,
+  SettingOutlined,
   UserOutlined
 } from "@ant-design/icons";
-import { App, Avatar, Button, Drawer, Grid, Upload } from "antd";
+import { App, Avatar, Button, Drawer, Grid, Select, Tag, Upload } from "antd";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { listApiItemsByProject, listProjects } from "../db";
+import { EnvManager } from "../components/EnvManager";
 import { RequestEditor } from "../components/RequestEditor";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { TitleBar } from "../components/TitleBar";
 import { TreePanel } from "../components/TreePanel";
 import { exportProjectAsJson, importProjectFromJson } from "../importExport";
 import { useApiStore } from "../stores/apiStore";
+import { useEnvStore } from "../stores/envStore";
 import { useProjectStore } from "../stores/projectStore";
 import { useTreeStore } from "../stores/treeStore";
 import type { HttpMethod } from "../types";
@@ -48,12 +51,21 @@ export const ProjectPage = () => {
   const moveToParent = useTreeStore((state) => state.moveToParent);
   const clipboardNodeId = useTreeStore((state) => state.clipboardNodeId);
 
+  // 环境变量
+  const environments = useEnvStore((s) => s.environments);
+  const envSettings = useEnvStore((s) => s.settings);
+  const activeEnv = useEnvStore((s) => s.activeEnv);
+  const setActiveEnv = useEnvStore((s) => s.setActiveEnv);
+  const loadEnv = useEnvStore((s) => s.load);
+  const [envManagerOpen, setEnvManagerOpen] = useState(false);
+
   const [methodMap, setMethodMap] = useState<Record<string, HttpMethod | undefined>>({});
 
   useEffect(() => {
     refreshProjects().catch(() => undefined);
     refreshNodes(projectId).catch(() => undefined);
-  }, [projectId, refreshNodes, refreshProjects]);
+    loadEnv(projectId!).catch(() => undefined); // 加载环境变量
+  }, [projectId, refreshNodes, refreshProjects, loadEnv]);
 
   useEffect(() => {
     loadByNodeId(selectedNodeId).catch(() => undefined);
@@ -162,6 +174,26 @@ export const ProjectPage = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* 环境选择 */}
+          <Select
+            value={envSettings?.activeEnvId ?? "__none__"}
+            onChange={(val) => setActiveEnv(val === "__none__" ? null : val)}
+            size="small"
+            className="!w-28"
+            options={[
+              { label: "无环境", value: "__none__" },
+              ...environments.map((e) => ({ label: e.name, value: e.id })),
+            ]}
+          />
+          {activeEnv && (
+            <Tag color="green" className="!m-0 !text-xs">{activeEnv.name}</Tag>
+          )}
+          <Button
+            icon={<SettingOutlined />}
+            size="small"
+            onClick={() => setEnvManagerOpen(true)}
+            className="!flex !h-7 !items-center !rounded-md !border-[var(--border-default)] !bg-[var(--bg-surface)] !px-2 !text-[13px] !text-[var(--text-primary)] hover:!border-[var(--accent)] hover:!text-[var(--accent)]"
+          />
           <ThemeToggle />
           
           <Upload
@@ -256,9 +288,12 @@ export const ProjectPage = () => {
         )}
 
         <main className="min-w-0 flex-1 overflow-auto bg-[var(--bg-base)]">
-          <RequestEditor projectId={projectId} />
+          <RequestEditor projectId={projectId!} />
         </main>
       </div>
+
+      {/* 环境管理弹窗 */}
+      <EnvManager projectId={projectId!} open={envManagerOpen} onClose={() => setEnvManagerOpen(false)} />
     </div>
   );
 };

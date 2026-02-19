@@ -6,9 +6,10 @@ import { emptyKV } from "../utils/constants";
 type Props = {
   value: KV[];
   onChange: (next: KV[]) => void;
+  type: "header" | "env";
 };
 
-export const EditableKvTable = ({ value, onChange }: Props) => {
+export const EditableKvTable = ({ value, onChange, type }: Props) => {
   const columns: ColumnsType<KV> = [
     {
       title: "启用",
@@ -32,7 +33,7 @@ export const EditableKvTable = ({ value, onChange }: Props) => {
       render: (_, row, index) => (
         <Input
           value={row.key}
-          placeholder="例如：Content-Type"
+          placeholder={type !== "header" ? "例如：Authorization" : "例如：content-type"}
           onChange={(event) => {
             const next = [...value];
             next[index] = { ...row, key: event.target.value };
@@ -47,7 +48,7 @@ export const EditableKvTable = ({ value, onChange }: Props) => {
       render: (_, row, index) => (
         <Input
           value={row.value}
-          placeholder="例如：application/json"
+          placeholder={type !== "header" ? "例如：Bearer xxxxxx" : "例如：application/json"}
           onChange={(event) => {
             const next = [...value];
             next[index] = { ...row, value: event.target.value };

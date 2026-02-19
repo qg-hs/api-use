@@ -77,10 +77,31 @@ export type RequestConfig = {
   timeoutMs?: number;
 };
 
+/** 环境定义，每个项目可创建多个 */
+export type Environment = {
+  id: string;
+  projectId: string;
+  name: string;
+  variables: KV[];
+  createdAt: number;
+  updatedAt: number;
+};
+
+/** 项目级设置：全局 Header + 当前激活环境 */
+export type ProjectSettings = {
+  id: string;
+  projectId: string;
+  globalHeaders: KV[];
+  activeEnvId: string | null;
+  updatedAt: number;
+};
+
 export type ExportPayload = {
   version: 1;
   exportedAt: number;
   project: Project;
   nodes: TreeNode[];
   apiItems: ApiItem[];
+  environments?: Environment[];
+  projectSettings?: ProjectSettings;
 };

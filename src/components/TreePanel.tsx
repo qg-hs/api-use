@@ -51,7 +51,7 @@ export const TreePanel = ({
   const [promptOpen, setPromptOpen] = useState(false);
   const [promptValue, setPromptValue] = useState("");
   const [promptTarget, setPromptTarget] = useState<{ action: "rename" | "create"; type?: TreeNode["type"]; nodeId?: string; parentId?: string | null } | null>(null);
-
+  const [modal, contextHolder] = Modal.useModal();
   const visibleNodes = useMemo(() => {
     if (!keyword.trim()) return nodes;
 
@@ -253,7 +253,8 @@ export const TreePanel = ({
                         label: "删除",
                         danger: true,
                         onClick: () => {
-                          Modal.confirm({
+                          modal.confirm({
+                            centered: true,
                             title: `确认删除该${rawNode.type === "folder" ? "文件夹" : "接口"}？`,
                             content: rawNode.type === "folder" ? "删除文件夹会递归删除内部节点和接口详情。" : "删除接口会同时删除接口配置。",
                             okButtonProps: { danger: true },
@@ -264,7 +265,7 @@ export const TreePanel = ({
                     ]
                   }}
                 >
-                  <Button size="small" type="text" icon={<EllipsisOutlined />} className="shrink-0" />
+                  <Button onClick={(e) => e.stopPropagation()} size="small" type="text" icon={<EllipsisOutlined />} className="shrink-0" />
                 </Dropdown>
               </div>
             );
@@ -290,9 +291,12 @@ export const TreePanel = ({
           }
           setPromptOpen(false);
         }}
+        destroyOnHidden
+        centered
       >
         <Input value={promptValue} onChange={(event) => setPromptValue(event.target.value)} />
       </Modal>
+      {contextHolder}
     </div>
   );
 };

@@ -1,11 +1,19 @@
 import Dexie, { type Table } from "dexie";
 import { nanoid } from "nanoid";
-import type { ApiItem, Project, TreeNode } from "../types";
+import type {
+  ApiItem,
+  Environment,
+  Project,
+  ProjectSettings,
+  TreeNode,
+} from "../types";
 
 class ApiUseDB extends Dexie {
   projects!: Table<Project, string>;
   nodes!: Table<TreeNode, string>;
   apiItems!: Table<ApiItem, string>;
+  environments!: Table<Environment, string>;
+  projectSettings!: Table<ProjectSettings, string>;
 
   constructor() {
     super("api-use-db");
@@ -13,6 +21,13 @@ class ApiUseDB extends Dexie {
       projects: "id, updatedAt",
       nodes: "id, projectId, parentId, sortOrder",
       apiItems: "id, projectId, nodeId, updatedAt",
+    });
+    this.version(2).stores({
+      projects: "id, updatedAt",
+      nodes: "id, projectId, parentId, sortOrder",
+      apiItems: "id, projectId, nodeId, updatedAt",
+      environments: "id, projectId",
+      projectSettings: "id, projectId",
     });
   }
 }
@@ -55,16 +70,31 @@ const collectNodeIds = (allNodes: TreeNode[], parentId: string): string[] => {
 };
 
 export const deleteProject = async (id: string) => {
-  await db.transaction("rw", db.projects, db.nodes, db.apiItems, async () => {
-    await db.projects.delete(id);
-    const ids = await db.nodes.where("projectId").equals(id).primaryKeys();
-    await db.nodes.bulkDelete(ids);
-    const apiIds = await db.apiItems
-      .where("projectId")
-      .equals(id)
-      .primaryKeys();
-    await db.apiItems.bulkDelete(apiIds);
-  });
+  await db.transaction(
+    "rw",
+    [db.projects, db.nodes, db.apiItems, db.environments, db.projectSettings],
+    async () => {
+      await db.projects.delete(id);
+      const ids = await db.nodes.where("projectId").equals(id).primaryKeys();
+      await db.nodes.bulkDelete(ids);
+      const apiIds = await db.apiItems
+        .where("projectId")
+        .equals(id)
+        .primaryKeys();
+      await db.apiItems.bulkDelete(apiIds);
+      // 清理环境和项目设置
+      const envIds = await db.environments
+        .where("projectId")
+        .equals(id)
+        .primaryKeys();
+      await db.environments.bulkDelete(envIds);
+      const settingsIds = await db.projectSettings
+        .where("projectId")
+        .equals(id)
+        .primaryKeys();
+      await db.projectSettings.bulkDelete(settingsIds);
+    },
+  );
 };
 
 export const listNodesByProject = async (projectId: string) => {
@@ -284,4 +314,71 @@ export const moveNodeToParent = async (
       });
     }
   });
+};
+
+// ==================== 环境变量 CRUD ====================
+
+export const listEnvironments = async (
+  projectId: string,
+): Promise<Environment[]> => {
+  return db.environments.where("projectId").equals(projectId).toArray();
+};
+
+export const createEnvironment = async (
+  projectId: string,
+  name: string,
+): Promise<Environment> => {
+  const now = Date.now();
+  const env: Environment = {
+    id: nanoid(),
+    projectId,
+    name,
+    variables: [],
+    createdAt: now,
+    updatedAt: now,
+  };
+  await db.environments.add(env);
+  return env;
+};
+
+export const updateEnvironment = async (
+  env: Environment,
+): Promise<Environment> => {
+  const next = { ...env, updatedAt: Date.now() };
+  await db.environments.put(next);
+  return next;
+};
+
+export const deleteEnvironment = async (envId: string): Promise<void> => {
+  await db.environments.delete(envId);
+};
+
+// ==================== 项目设置 CRUD ====================
+
+export const getProjectSettings = async (
+  projectId: string,
+): Promise<ProjectSettings> => {
+  const existing = await db.projectSettings
+    .where("projectId")
+    .equals(projectId)
+    .first();
+  if (existing) return existing;
+  // 不存在时自动创建默认设置
+  const settings: ProjectSettings = {
+    id: nanoid(),
+    projectId,
+    globalHeaders: [],
+    activeEnvId: null,
+    updatedAt: Date.now(),
+  };
+  await db.projectSettings.add(settings);
+  return settings;
+};
+
+export const saveProjectSettings = async (
+  settings: ProjectSettings,
+): Promise<ProjectSettings> => {
+  const next = { ...settings, updatedAt: Date.now() };
+  await db.projectSettings.put(next);
+  return next;
 };

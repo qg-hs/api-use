@@ -9,6 +9,7 @@ import { useKeyPress } from "ahooks";
 import { Button, Card, Col, Empty, Flex, Input, Row, Select, Space, Tabs, Tag, Typography, message } from "antd";
 import { useState } from "react";
 import { useApiStore } from "../stores/apiStore";
+import { useEnvStore } from "../stores/envStore";
 import { useRunStore } from "../stores/runStore";
 import { useTreeStore } from "../stores/treeStore";
 import { HTTP_METHODS } from "../utils/constants";
@@ -95,13 +96,20 @@ export const RequestEditor = ({ projectId }: { projectId: string }) => {
                     message.warning("请先输入请求地址");
                     return;
                   }
-                  // await handleSave();
+                  // 变量替换 + 全局 Header 合并
+                  const resolve = useEnvStore.getState().resolveVariables;
+                  const globalHeaders = useEnvStore.getState().settings?.globalHeaders ?? [];
+                  // 全局 Header（低优先级）+ 接口级 Header（高优先级覆盖）
+                  const mergedHeaders = [
+                    ...globalHeaders.filter((g) => g.enabled && g.key),
+                    ...current.headers,
+                  ];
                   await run({
                     method: current.method,
-                    url: current.url,
+                    url: resolve(current.url),
                     auth: current.auth,
-                    headers: current.headers,
-                    query: current.query,
+                    headers: mergedHeaders.map((h) => ({ ...h, key: resolve(h.key), value: resolve(h.value) })),
+                    query: current.query.map((q) => ({ ...q, key: resolve(q.key), value: resolve(q.value) })),
                     body: current.body
                   });
                 }}

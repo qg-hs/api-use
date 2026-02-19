@@ -323,6 +323,7 @@ export const getComponentsConfig = (
       borderColor: isDark ? "#2d2440" : "#e5dff2",
     },
     Modal: {
+      paddingLG: 18,
       contentBg: isDark ? "#1a1428" : "#ffffff",
       headerBg: isDark ? "#1a1428" : "#ffffff",
       borderRadiusLG: 12,
