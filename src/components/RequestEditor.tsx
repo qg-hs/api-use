@@ -171,7 +171,6 @@ export const RequestEditor = ({ projectId }: { projectId: string }) => {
                   type={current.body.type}
                   value={current.body.value}
                   onTypeChange={(type) => {
-                    // 切换类型时同时重置 value，避免残留数据导致 [object Object]
                     const defaultValue = type === "form" ? [] : "";
                     patchCurrent({ body: { type: type as typeof current.body.type, value: defaultValue } });
                   }}
@@ -179,7 +178,7 @@ export const RequestEditor = ({ projectId }: { projectId: string }) => {
                 />
               )
             }
-          ]}
+          ].filter((tab) => !(tab.key === "body" && current.method === "GET"))}
         />
       </Card>
 
