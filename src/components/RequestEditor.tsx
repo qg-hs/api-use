@@ -164,12 +164,12 @@ export const RequestEditor = ({ projectId }: { projectId: string }) => {
             {
               key: "headers",
               label: <span><TagsOutlined /> 请求头（Headers）</span>,
-              children: <EditableKvTable value={current.headers} onChange={(headers) => patchCurrent({ headers })} />
+              children: <EditableKvTable type="header" value={current.headers} onChange={(headers) => patchCurrent({ headers })} />
             },
             {
               key: "query",
               label: <span><SettingOutlined /> 查询参数（Query）</span>,
-              children: <EditableKvTable value={current.query} onChange={(query) => patchCurrent({ query })} />
+              children: <EditableKvTable type="env" value={current.query} onChange={(query) => patchCurrent({ query })} />
             },
             {
               key: "body",

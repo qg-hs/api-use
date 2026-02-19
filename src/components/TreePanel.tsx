@@ -158,7 +158,12 @@ export const TreePanel = ({
           draggable={{ icon: false }} /* 启用拖拽，隐藏拖拽图标 */
           selectedKeys={selectedNodeId ? [selectedNodeId] : []}
           treeData={treeData}
-          onSelect={(keys) => onSelect((keys[0] as string) ?? null)}
+          onSelect={(keys) => {
+            // keys 为空时表示再次点击同一节点或操作菜单导致的取消，忽略
+            if (keys.length > 0) {
+              onSelect(keys[0] as string);
+            }
+          }}
           onDrop={handleDrop}
           allowDrop={({ dropNode, dropPosition }) => {
             const target = nodes.find((n) => n.id === dropNode.key);

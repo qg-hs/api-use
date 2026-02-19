@@ -21,7 +21,7 @@ export const ThemeSelector = () => {
   const themeName = useThemeStore((state) => state.themeName);
   const setThemeName = useThemeStore((state) => state.setThemeName);
 
-  const currentTheme = THEME_OPTIONS.find((t) => t.key === themeName);
+
 
   return (
     <Dropdown

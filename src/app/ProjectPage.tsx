@@ -23,7 +23,6 @@ import { useProjectStore } from "../stores/projectStore";
 import { useTreeStore } from "../stores/treeStore";
 import type { HttpMethod } from "../types";
 
-const { useBreakpoint } = Grid;
 
 export const ProjectPage = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -63,8 +62,8 @@ export const ProjectPage = () => {
 
   useEffect(() => {
     refreshProjects().catch(() => undefined);
-    refreshNodes(projectId).catch(() => undefined);
-    loadEnv(projectId!).catch(() => undefined); // 加载环境变量
+    refreshNodes(projectId!).catch(() => undefined);
+    loadEnv(projectId!).catch(() => undefined);
   }, [projectId, refreshNodes, refreshProjects, loadEnv]);
 
   useEffect(() => {
@@ -72,7 +71,7 @@ export const ProjectPage = () => {
   }, [loadByNodeId, selectedNodeId]);
 
   useEffect(() => {
-    listApiItemsByProject(projectId)
+    listApiItemsByProject(projectId!)
       .then((items) => {
         const next: Record<string, HttpMethod | undefined> = {};
         for (const item of items) {
@@ -111,16 +110,16 @@ export const ProjectPage = () => {
         if (isMobile) setDrawerOpen(false);
       }}
       onAdd={async (type, parentId, name) => {
-        const node = await addNode({ projectId, parentId, type, name: name || (type === "api" ? "新接口" : "新文件夹") });
-        await refreshNodes(projectId);
+        const node = await addNode({ projectId: projectId!, parentId, type, name: name || (type === "api" ? "新接口" : "新文件夹") });
+        await refreshNodes(projectId!);
         return node.id;
       }}
-      onRename={async (nodeId, name) => renameNode(nodeId, name, projectId)}
-      onDelete={async (nodeId) => removeNode(nodeId, projectId)}
-      onMove={async (nodeId, direction) => moveNode(nodeId, direction, projectId)}
+      onRename={async (nodeId, name) => renameNode(nodeId, name, projectId!)}
+      onDelete={async (nodeId) => removeNode(nodeId, projectId!)}
+      onMove={async (nodeId, direction) => moveNode(nodeId, direction, projectId!)}
       onCopy={(nodeId) => copyNode(nodeId)}
-      onPaste={async (parentId) => pasteNode(parentId, projectId)}
-      onDrop={async (nodeId, newParentId, index) => moveToParent(nodeId, newParentId, index, projectId)}
+      onPaste={async (parentId) => pasteNode(parentId, projectId!)}
+      onDrop={async (nodeId, newParentId, index) => moveToParent(nodeId, newParentId, index, projectId!)}
     />
   );
 
