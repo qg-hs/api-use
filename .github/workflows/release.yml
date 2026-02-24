@@ -17,7 +17,7 @@ jobs:
           - platform: macos-latest
             target: aarch64-apple-darwin
             name: mac-arm64
-          - platform: macos-13
+          - platform: macos-14
             target: x86_64-apple-darwin
             name: mac-x64
           - platform: windows-latest
@@ -36,15 +36,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
+        run: npm install -g pnpm@10
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --no-frozen-lockfile
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -53,7 +51,7 @@ jobs:
 
       # Linux 依赖
       - name: Install Linux dependencies
-        if: matrix.platform == 'ubuntu-22.04'
+        if: contains(matrix.platform, 'ubuntu')
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -75,12 +73,12 @@ jobs:
 
             ### 下载安装
 
-            | 平台 | 文件 | 安装方式 |
-            |---|---|---|
-            | macOS (Apple Silicon) | `.dmg` | 双击安装，如提示"已损坏"请执行 `xattr -cr /Applications/API-USE.app` |
-            | macOS (Intel) | `.dmg` | 同上 |
-            | Windows | `.msi` / `.exe` | 双击安装，如 SmartScreen 提示点"仍要运行" |
-            | Linux | `.deb` / `.rpm` / `.AppImage` | `dpkg -i` / `rpm -i` / 直接运行 |
+            | 平台 | 安装方式 |
+            |---|---|
+            | macOS (Apple Silicon) | 下载 `.dmg`，如提示"已损坏"执行 `xattr -cr /Applications/API-USE.app` |
+            | macOS (Intel) | 同上 |
+            | Windows | 下载 `.msi` 或 `.exe`，SmartScreen 提示点"仍要运行" |
+            | Linux | `.deb`: `sudo dpkg -i xxx.deb` / `.AppImage`: `chmod +x && 运行` |
           releaseDraft: false
           prerelease: false
           includeUpdaterJson: false
