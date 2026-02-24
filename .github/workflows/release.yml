@@ -15,16 +15,16 @@ jobs:
       matrix:
         include:
           - platform: macos-latest
-            target: aarch64-apple-darwin
+            args: "--target aarch64-apple-darwin"
             name: mac-arm64
-          - platform: macos-14
-            target: x86_64-apple-darwin
+          - platform: macos-latest
+            args: "--target x86_64-apple-darwin"
             name: mac-x64
           - platform: windows-latest
-            target: x86_64-pc-windows-msvc
+            args: ""
             name: win-x64
           - platform: ubuntu-22.04
-            target: x86_64-unknown-linux-gnu
+            args: ""
             name: linux-x64
 
     runs-on: ${{ matrix.platform }}
@@ -47,7 +47,7 @@ jobs:
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.target }}
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
 
       # Linux 依赖
       - name: Install Linux dependencies
@@ -75,10 +75,11 @@ jobs:
 
             | 平台 | 安装方式 |
             |---|---|
-            | macOS (Apple Silicon) | 下载 `.dmg`，如提示"已损坏"执行 `xattr -cr /Applications/API-USE.app` |
-            | macOS (Intel) | 同上 |
+            | macOS (Apple Silicon) | 下载 `aarch64.dmg`，如提示"已损坏"执行 `xattr -cr /Applications/API-USE.app` |
+            | macOS (Intel) | 下载 `x64.dmg`，同上 |
             | Windows | 下载 `.msi` 或 `.exe`，SmartScreen 提示点"仍要运行" |
             | Linux | `.deb`: `sudo dpkg -i xxx.deb` / `.AppImage`: `chmod +x && 运行` |
           releaseDraft: false
           prerelease: false
           includeUpdaterJson: false
+          args: ${{ matrix.args }}
