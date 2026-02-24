@@ -82,9 +82,16 @@ fn encode_body(payload: &RequestPayload) -> Result<Option<String>, String> {
   }
 
   match payload.body.body_type.as_str() {
-    "json" => serde_json::to_string(&payload.body.value)
-      .map(Some)
-      .map_err(|e| format!("JSON 序列化失败: {}", e)),
+    "json" => {
+      // 前端 TextArea 传来的 JSON 字符串会被 serde 反序列化为 Value::String，
+      // 直接取原值避免 serde_json::to_string 二次转义
+      let raw = match &payload.body.value {
+        serde_json::Value::String(s) => s.clone(),
+        other => serde_json::to_string(other)
+          .map_err(|e| format!("JSON 序列化失败: {}", e))?,
+      };
+      Ok(Some(raw))
+    }
     "form" => {
       let arr = payload
         .body

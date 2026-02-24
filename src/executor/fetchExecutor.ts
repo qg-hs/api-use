@@ -29,7 +29,9 @@ const resolveBody = async (
   }
 
   if (config.body.type === "json") {
-    return JSON.stringify(config.body.value ?? {});
+    // 前端 TextArea 传来的已经是 JSON 字符串，直接使用；对象才需要序列化
+    const v = config.body.value;
+    return typeof v === "string" ? v : JSON.stringify(v ?? {});
   }
 
   if (config.body.type === "form") {
