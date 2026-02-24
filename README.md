@@ -107,11 +107,53 @@ api-use/
 
 前往 [Releases](https://github.com/qg-hs/api-use/releases) 下载对应平台的安装包。
 
-| 平台    | 安装方式                                              |
-| ------- | ----------------------------------------------------- |
-| macOS   | 解压后双击 `install.command`                          |
-| Windows | 双击 `.msi` 或 `.exe` 安装                            |
-| Linux   | `dpkg -i .deb` / `rpm -i .rpm` / 直接运行 `.AppImage` |
+| 平台                  | 文件格式                      | 安装方式                    |
+| --------------------- | ----------------------------- | --------------------------- |
+| macOS (Apple Silicon) | `.dmg`                        | 双击挂载后拖入 Applications |
+| macOS (Intel)         | `.dmg`                        | 同上                        |
+| Windows               | `.msi` / `.exe`               | 双击安装                    |
+| Linux                 | `.deb` / `.rpm` / `.AppImage` | 见下方说明                  |
+
+### 🍎 macOS 安装提示
+
+由于本应用未进行 Apple 开发者签名和公证，macOS Gatekeeper 可能会阻止应用运行并提示 **"已损坏，无法打开"** 或 **"无法验证开发者"**。
+
+**这并不意味着应用真的损坏了**，只是 macOS 对未签名应用的安全策略。
+
+#### 解决方法
+
+安装完成后，打开 **终端 (Terminal)**，执行以下命令：
+
+```bash
+sudo xattr -rd com.apple.quarantine /Applications/API-USE.app
+```
+
+输入系统密码后回车即可。之后就能正常打开应用了。
+
+> **原理说明**：macOS 会给从网络下载的文件添加 `com.apple.quarantine` 隔离属性，Gatekeeper 检测到该属性后会验证签名。上述命令移除隔离属性，跳过签名验证。
+
+#### 其他方式
+
+- **右键打开**：在 Finder 中右键点击 `API-USE.app` → 选择「打开」→ 在弹窗中点击「打开」
+- **系统设置**：打开「系统设置 → 隐私与安全性」，在底部找到被阻止的应用，点击「仍要打开」
+
+### 🪟 Windows 安装提示
+
+首次运行可能出现 **SmartScreen** 提示「Windows 已保护你的电脑」，点击 **「更多信息」→「仍要运行」** 即可。
+
+### 🐧 Linux 安装
+
+```bash
+# Debian / Ubuntu
+sudo dpkg -i API-USE_x.x.x_amd64.deb
+
+# Fedora / RHEL
+sudo rpm -i API-USE-x.x.x-1.x86_64.rpm
+
+# AppImage（任意发行版）
+chmod +x API-USE_x.x.x_amd64.AppImage
+./API-USE_x.x.x_amd64.AppImage
+```
 
 ## 📄 License
 
