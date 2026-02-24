@@ -16,8 +16,10 @@ import {
   ApiOutlined,
   ClockCircleOutlined,
   EllipsisOutlined,
+  InfoCircleOutlined,
   PlusOutlined,
   SearchOutlined,
+  SettingOutlined,
   UploadOutlined,
   UserOutlined
 } from "@ant-design/icons";
@@ -25,9 +27,9 @@ import dayjs from "dayjs";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { exportProjectAsJson, importProjectFromJson } from "../importExport";
+import { AboutModal } from "../components/AboutModal";
 import { ProjectFormModal } from "../components/ProjectFormModal";
-import { ThemeToggle } from "../components/ThemeToggle";
-import { ThemeSelector } from "../components/ThemeSelector";
+import { SettingsModal } from "../components/SettingsModal";
 import { TitleBar } from "../components/TitleBar";
 import { MobileMenu } from "../components/MobileMenu";
 import { useProjectStore } from "../stores/projectStore";
@@ -47,6 +49,14 @@ export const ProjectListPage = () => {
     open: false,
     mode: "create"
   });
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
+
+  // 头像下拉菜单项
+  const avatarMenuItems = [
+    { key: "settings", icon: <SettingOutlined />, label: "设置", onClick: () => setSettingsOpen(true) },
+    { key: "about", icon: <InfoCircleOutlined />, label: "关于", onClick: () => setAboutOpen(true) },
+  ];
 
   useEffect(() => {
     refresh().catch(() => undefined);
@@ -101,17 +111,17 @@ export const ProjectListPage = () => {
         {/* 移动端 - 整合菜单 */}
         <div className="inline-flex items-center justify-end gap-2 md:hidden">
           <MobileMenu onImport={handleImport} />
-          <Avatar 
-            size={34} 
-            icon={<UserOutlined />}
-            className="!cursor-pointer !bg-accent !text-accent-solid !shadow-glow !transition-all !duration-150 hover:!scale-105"
-          />
+          <Dropdown menu={{ items: avatarMenuItems }} trigger={["hover"]} placement="bottomRight">
+            <Avatar 
+              size={34} 
+              icon={<UserOutlined />}
+              className="!cursor-pointer !bg-accent !text-accent-solid !shadow-glow !transition-all !duration-150 hover:!scale-105"
+            />
+          </Dropdown>
         </div>
 
         {/* 桌面端 - 显示分开的按钮 */}
         <div className="hidden items-center justify-end gap-2 md:inline-flex md:gap-2.5 md:justify-self-end">
-          <ThemeSelector />
-          <ThemeToggle />
           <Upload
             showUploadList={false}
             accept=".json"
@@ -128,11 +138,13 @@ export const ProjectListPage = () => {
               导入
             </Button>
           </Upload>
-          <Avatar 
-            size={34} 
-            icon={<UserOutlined />}
-            className="!cursor-pointer !bg-accent !text-accent-solid !shadow-glow !transition-all !duration-150 hover:!scale-105"
-          />
+          <Dropdown menu={{ items: avatarMenuItems }} trigger={["hover"]} placement="bottomRight">
+            <Avatar 
+              size={34} 
+              icon={<UserOutlined />}
+              className="!cursor-pointer !bg-accent !text-accent-solid !shadow-glow !transition-all !duration-150 hover:!scale-105"
+            />
+          </Dropdown>
         </div>
       </header>
 
@@ -312,6 +324,8 @@ export const ProjectListPage = () => {
           setModalState({ open: false, mode: "create" });
         }}
       />
+      <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <AboutModal open={aboutOpen} onClose={() => setAboutOpen(false)} />
       </div>
     </div>
   );

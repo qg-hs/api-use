@@ -204,7 +204,9 @@ export const RequestEditor = ({ projectId }: { projectId: string }) => {
             </Space>
           ) : null}
         </Flex>
-        <ResponseViewer result={result} />
+        <div className="flex-1 overflow-auto">
+          <ResponseViewer result={result} />
+        </div>
       </Card>
     </div>
   );

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2d1b69"/>
+      <stop offset="50%" stop-color="#1e1145"/>
+      <stop offset="100%" stop-color="#0f0a2e"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#a855f7"/>
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="20" flood-color="#22d3ee" flood-opacity="0.4"/>
+    </filter>
+    <filter id="innerGlow">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- 圆角背景 -->
+  <rect width="1024" height="1024" rx="228" ry="228" fill="url(#bg)"/>
+
+  <!-- 边框光晕 -->
+  <rect x="4" y="4" width="1016" height="1016" rx="224" ry="224" fill="none" stroke="url(#glow)" stroke-width="2" opacity="0.3"/>
+
+  <!-- 闪电/API 连接符号 -->
+  <g transform="translate(512, 512)" filter="url(#shadow)">
+    <!-- 左侧括号 { -->
+    <text x="-200" y="30" font-family="SF Pro Display, -apple-system, Helvetica Neue, Arial" font-size="320" font-weight="700" fill="url(#glow)" text-anchor="middle" opacity="0.9">{</text>
+
+    <!-- 中间闪电 -->
+    <polygon points="-20,-120 40,-10 0,-10 20,120 -40,10 0,10" fill="#22d3ee" opacity="0.95"/>
+
+    <!-- 右侧括号 } -->
+    <text x="200" y="30" font-family="SF Pro Display, -apple-system, Helvetica Neue, Arial" font-size="320" font-weight="700" fill="url(#glow)" text-anchor="middle" opacity="0.9">}</text>
+  </g>
+
+  <!-- 底部光晕装饰 -->
+  <ellipse cx="512" cy="750" rx="200" ry="30" fill="#22d3ee" opacity="0.08"/>
+</svg>

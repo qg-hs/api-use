@@ -299,3 +299,26 @@
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   JSON 语法高亮
+   ═══════════════════════════════════════════════════════════════ */
+
+.json-viewer {
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+/* 深色主题默认 */
+.json-key { color: #c084fc; }
+.json-string { color: #86efac; }
+.json-number { color: #fdba74; }
+.json-boolean { color: #67e8f9; }
+.json-null { color: #94a3b8; font-style: italic; }
+
+/* 浅色主题 */
+:root[data-theme^="light"] .json-key { color: #7c3aed; }
+:root[data-theme^="light"] .json-string { color: #059669; }
+:root[data-theme^="light"] .json-number { color: #d97706; }
+:root[data-theme^="light"] .json-boolean { color: #0891b2; }
+:root[data-theme^="light"] .json-null { color: #64748b; font-style: italic; }
+

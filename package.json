@@ -1,7 +1,7 @@
 {
   "name": "api-use",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,7 +9,10 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build"
+    "tauri:build": "tauri build",
+    "build:mac": "bash scripts/build-mac.sh",
+    "build:win": "scripts/build-win.bat",
+    "build:linux": "bash scripts/build-linux.sh"
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.0",

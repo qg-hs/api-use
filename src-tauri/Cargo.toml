@@ -1,8 +1,8 @@
 [package]
 name = "api-use"
-version = "0.1.0"
+version = "1.0.0"
 description = "API-USE desktop"
-authors = ["api-use"]
+authors = ["qghs"]
 edition = "2021"
 
 [lib]

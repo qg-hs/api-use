@@ -279,7 +279,7 @@ export const TreePanel = ({
       </div>
 
       <Modal
-        title={promptTarget?.action === "rename" ? "重命名" : "创建节点"}
+        title={promptTarget?.action === "rename" ? "重命名" : promptTarget?.action === 'create' ? promptTarget.type === 'api' ? '创建接口' : '创建文件夹' : ''}
         open={promptOpen}
         onCancel={() => setPromptOpen(false)}
         onOk={async () => {

@@ -1,6 +1,12 @@
 node_modules
 dist
+dist-mac
+dist-win
+dist-linux
 .DS_Store
 .vscode
 *.log
 src-tauri/target
+*.zip
+*.tar.gz
+.gemini

@@ -3,17 +3,20 @@ import {
   ArrowLeftOutlined,
   ExportOutlined,
   ImportOutlined,
+  InfoCircleOutlined,
   MenuOutlined,
   SettingOutlined,
   UserOutlined
 } from "@ant-design/icons";
-import { App, Avatar, Button, Drawer, Grid, Select, Tag, Upload } from "antd";
+import { App, Avatar, Button, Drawer, Dropdown, Grid, Select, Tag, Upload } from "antd";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { listApiItemsByProject, listProjects } from "../db";
+import { AboutModal } from "../components/AboutModal";
 import { EnvManager } from "../components/EnvManager";
 import { RequestEditor } from "../components/RequestEditor";
-import { ThemeToggle } from "../components/ThemeToggle";
+import { SettingsModal } from "../components/SettingsModal";
+
 import { TitleBar } from "../components/TitleBar";
 import { TreePanel } from "../components/TreePanel";
 import { exportProjectAsJson, importProjectFromJson } from "../importExport";
@@ -30,6 +33,8 @@ export const ProjectPage = () => {
   const { message } = App.useApp();
   const { xs: isMobile } = Grid.useBreakpoint();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
 
   const refreshProjects = useProjectStore((state) => state.refresh);
   const projects = useProjectStore((state) => state.projects);
@@ -193,7 +198,7 @@ export const ProjectPage = () => {
             onClick={() => setEnvManagerOpen(true)}
             className="!flex !h-7 !items-center !rounded-md !border-[var(--border-default)] !bg-[var(--bg-surface)] !px-2 !text-[13px] !text-[var(--text-primary)] hover:!border-[var(--accent)] hover:!text-[var(--accent)]"
           />
-          <ThemeToggle />
+
           
           <Upload
             showUploadList={false}
@@ -239,11 +244,32 @@ export const ProjectPage = () => {
             {!isMobile && "导出"}
           </Button>
 
-          <Avatar 
-            size={28} 
-            icon={<UserOutlined />}
-            className="!cursor-pointer !bg-accent !text-[13px] !text-accent-solid !shadow-glow hover:!opacity-90"
-          />
+          <Dropdown
+            menu={{
+              items: [
+                {
+                  key: "settings",
+                  icon: <SettingOutlined />,
+                  label: "设置",
+                  onClick: () => setSettingsOpen(true),
+                },
+                {
+                  key: "about",
+                  icon: <InfoCircleOutlined />,
+                  label: "关于",
+                  onClick: () => setAboutOpen(true),
+                },
+              ],
+            }}
+            trigger={["hover"]}
+            placement="bottomRight"
+          >
+            <Avatar 
+              size={28} 
+              icon={<UserOutlined />}
+              className="!cursor-pointer !bg-accent !text-[13px] !text-accent-solid !shadow-glow hover:!opacity-90"
+            />
+          </Dropdown>
         </div>
       </header>
 
@@ -293,6 +319,8 @@ export const ProjectPage = () => {
 
       {/* 环境管理弹窗 */}
       <EnvManager projectId={projectId!} open={envManagerOpen} onClose={() => setEnvManagerOpen(false)} />
+      <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <AboutModal open={aboutOpen} onClose={() => setAboutOpen(false)} />
     </div>
   );
 };
